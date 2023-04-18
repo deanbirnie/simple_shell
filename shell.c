@@ -43,13 +43,17 @@ int main(void)
 		/* Read the user's command input */
 		input = read_input();
 
+		 /* If the end of file (Ctrl+D) is reached, exit the shell */
+                if (input == NULL) 
+		{
+                    printf("\n");
+                    break;
+                }
+
 		/* Parse the input string into an array of arguments */
 		args = parse_input(input);
 
-/* execute(args) function takes an array of command-line arguments as input
-* and executes the specified command if it is a valid command in the system
-* returning a status code indicating whether the command was
-executed successfully or not */
+/* execute(args) function takes an array of command-line arguments as input */
 		status = execute(args);
 
 		/* Free the memory allocated for the input and arguments */
