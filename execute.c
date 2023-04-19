@@ -1,57 +1,96 @@
-#include "shell.h" 
-#include <stdio.h> 
-#include <unistd.h> 
-#include <sys/wait.h> 
-#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include "shell.h"
 
-int execute(char **args)
+/**
+ *execute - executes a command
+ *@args: the command to execute
+ *@env: environment variables
+ *
+ *Return: On success, return 0. On failure, return an error code.
+ */
+int execute(char **args, char **env)
 {
+	struct stat st;
+	char *path = NULL, **tokens = NULL;
 	pid_t pid;
-	int status;
-	pid = fork(); /* create a child process */
+
+	path = find_path(args[0]);
+	if (path == NULL)
+		return (-1);
+
+	if (stat(path, &st) != 0 || !(st.st_mode &S_IXUSR))
+	{
+		free(path);
+		return (-1);
+	}
+
+	tokens = tokenize(args[0], ":");
+
+	pid = fork();
+	if (pid == -1)
+	{
+		perror("Error");
+		return (-1);
+	}
+
 	if (pid == 0)
 	{
-		/* child process */
-		if (execvp(args[0], args) == -1)
-		{
-			/* handle errors that occur during execution */
-			if (errno == ENOENT)
-			{
-				/* command not found */
-				return (COMMAND_NOT_FOUND);
-			}
-			else if (errno == E2BIG)
-			{
-				/* too many arguments */
-				return (TOO_MANY_ARGUMENTS);
-			}
-			else if (errno == EACCES)
-			{	/* permission denied */
-				return (PERMISSION_DENIED);
-			}
-			else
-			{	/* other error */
-				perror("execvp");
-				return (EXECUTION_ERROR);
-			}
-		}
-		exit(EXIT_FAILURE); /* exit the child process */
-    }
-    else if (pid < 0)
-	{	/* error forking */
-		perror("fork");
-		return (FORK_ERROR);
-	}
-	else
-	{	/* parent process */
-		do 
-		{
-		/* wait for child process to terminate */
-		waitpid(pid, &status, WUNTRACED);
-		}
-		/* loop until child process exits or is terminated */
-		while (!WIFEXITED(status) && !WIFSIGNALED(status));
+		execve(path, args, env);
+		perror("Error");
+		exit(EXIT_FAILURE);
 	}
 
-	return (0); /* return exit status of the child process */
+	wait(NULL);
+
+	free(path);
+	free(tokens);
+	return (0);
+}
+
+/**
+ *find_path - finds the full path of a command
+ *@command: the command to find the full path of
+ *
+ *Return: On success, return the full path of the command. On failure, return NULL.
+ */
+char *find_path(char *command)
+{
+	char *path = NULL, **tokens = NULL, *full_path = NULL;
+	int i = 0;
+
+	path = _getenv("PATH");
+	if (path == NULL)
+		return (NULL);
+
+	tokens = tokenize(path, ":");
+	free(path);
+
+	while (tokens[i] != NULL)
+	{
+		full_path = malloc(sizeof(char) *(_strlen(tokens[i]) + _strlen(command) + 2));
+		if (full_path == NULL)
+		{
+			free(tokens);
+			return (NULL);
+		}
+
+		_strcpy(full_path, tokens[i]);
+		_strcat(full_path, "/");
+		_strcat(full_path, command);
+
+		if (stat(full_path, &st) == 0 && S_ISREG(st.st_mode) &&
+			(st.st_mode &S_IXUSR))
+		{
+			free(tokens);
+			return (full_path);
+		}
+
+		free(full_path);
+		i++;
+	}
+
+	free(tokens);
+	return (NULL);
 }
