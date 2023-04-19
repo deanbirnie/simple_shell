@@ -3,71 +3,89 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include "shell.h"
+#define MAX_CMD_LENGTH 1024
 
-/* Define the maximum size of a command input */
-#define BUFFER_SIZE 1024
-
-/* Display the prompt for the user to enter a command */
-void prompt(void)
+/*Parse the user's input */
+void parse_input(char *input, char **args)
 {
-	printf("> ");
+	char *token;
+	int i = 0;
+
+	/*Get the first token */
+	token = strtok(input, " \n");
+
+	/*Keep getting tokens until we reach the end of the input */
+	while (token != NULL)
+	{
+		args[i] = token;
+		i++;
+
+		/*Get the next token */
+		token = strtok(NULL, " \n");
+	}
+
+	/*Set the last argument to NULL to mark the end of the argument list */
+	args[i] = NULL;
 }
 
-/* Read the user's command input from standard input */
-	char *read_input()
+/*Execute the command */
+void execute(char **args)
 {
-/* Allocate memory for the input string */
-	char *input = (char *) malloc(BUFFER_SIZE * sizeof(char));
+	pid_t pid;
 
-/* Read upto BUFFER_SIZE characters from standard input,store them in input */
-	   fgets(input, BUFFER_SIZE, stdin);
+	/*Fork the process */
+	pid = fork();
 
-	   /* Return the input string */
-	   return (input);
+	if (pid == 0)
+	{
+		/*Child process */
+		if (execvp(args[0], args) == -1)
+		{
+			perror("Error");
+		}
+
+		exit(EXIT_FAILURE);
+	}
+	else if (pid < 0)
+	{
+		/*Forking error */
+		perror("Error");
+	}
+	else
+	{
+		/*Parent process */
+		int wpid;
+		do { 	wpid = waitpid(pid, NULL, WUNTRACED);
+		}
+
+		while (!WIFEXITED(wpid) && !WIFSIGNALED(wpid));
+	}
 }
 
-/* The main function of the shell */
 int main(void)
 {
-	char *input;    /* A string to hold the user's input command */
-	char **args;    /* An array to hold the arguments of the command */
-	int status;     /* The exit status of the command */
+	char input[MAX_CMD_LENGTH];
+	char *args[MAX_CMD_LENGTH / 2 + 1];
 
-	/* Loop until the shell is exited */
 	while (1)
 	{
-		/* Display the prompt */
-		prompt();
+		/*Get user input */
+		printf("Shell > ");
+		fgets(input, MAX_CMD_LENGTH, stdin);
 
-		/* Read the user's command input */
-		input = read_input();
+		/*Parse the input into arguments */
+		parse_input(input, args);
 
-		 /* If the end of file (Ctrl+D) is reached, exit the shell */
-                if (input == NULL) 
+		/*Execute the command */
+		if (strcmp(args[0], "exit") == 0)
 		{
-                    printf("\n");
-                    break;
-                }
-
-		/* Parse the input string into an array of arguments */
-		args = parse_input(input);
-
-/* execute(args) function takes an array of command-line arguments as input */
-		status = execute(args);
-
-		/* Free the memory allocated for the input and arguments */
-		free(input);
-		free(args);
-
-		/* Check if the shell should be exited */
-		if (status == EXIT_SHELL)
+			exit(EXIT_SUCCESS);
+		}
+		else
 		{
-			break;
+			execute(args);
 		}
 	}
 
-	/* Exit the shell */
 	return (0);
 }
-
