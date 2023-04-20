@@ -1,96 +1,165 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <string.h>
 #include "shell.h"
 
 /**
- *execute - executes a command
- *@args: the command to execute
- *@env: environment variables
- *
- *Return: On success, return 0. On failure, return an error code.
+ *execute - executes a command with arguments
+ *@args: array of arguments passed to command
+ *Return: status code of command
  */
-int execute(char **args, char **env)
+int execute(char **args)
 {
-	struct stat st;
-	char *path = NULL, **tokens = NULL;
+	extern char **environ;
 	pid_t pid;
-
-	path = find_path(args[0]);
-	if (path == NULL)
-		return (-1);
-
-	if (stat(path, &st) != 0 || !(st.st_mode &S_IXUSR))
-	{
-		free(path);
-		return (-1);
-	}
-
-	tokens = tokenize(args[0], ":");
+	int status;
 
 	pid = fork();
-	if (pid == -1)
-	{
-		perror("Error");
-		return (-1);
-	}
-
 	if (pid == 0)
 	{
-		execve(path, args, env);
+		/*Child process */
+		if (execve(args[0], args, environ) == -1)
+		{
+			perror("Error");
+			exit(EXIT_FAILURE);
+		}
+	}
+	else if (pid < 0)
+	{
+		/*Error forking */
 		perror("Error");
-		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		/*Parent process */
+		do {	status = waitpid(pid, &status, WUNTRACED);
+		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
 	}
 
-	wait(NULL);
-
-	free(path);
-	free(tokens);
-	return (0);
+	return (status);
 }
 
 /**
- *find_path - finds the full path of a command
- *@command: the command to find the full path of
- *
- *Return: On success, return the full path of the command. On failure, return NULL.
+ *find_command - finds a command in PATH
+ *@cmd: command to find
+ *@path: buffer to store path in
+ *Return: pointer to path or NULL if command not found
  */
-char *find_path(char *command)
+char *find_command(char *cmd, char *path)
 {
-	char *path = NULL, **tokens = NULL, *full_path = NULL;
-	int i = 0;
+	char *dir, *p;
+	struct stat st;
 
-	path = _getenv("PATH");
-	if (path == NULL)
-		return (NULL);
-
-	tokens = tokenize(path, ":");
-	free(path);
-
-	while (tokens[i] != NULL)
+	p = strtok(path, ":");
+	while (p)
 	{
-		full_path = malloc(sizeof(char) *(_strlen(tokens[i]) + _strlen(command) + 2));
-		if (full_path == NULL)
-		{
-			free(tokens);
-			return (NULL);
-		}
+		dir = malloc(strlen(p) + strlen(cmd) + 2);
+		if (!dir)
+			exit(EXIT_FAILURE);
 
-		_strcpy(full_path, tokens[i]);
-		_strcat(full_path, "/");
-		_strcat(full_path, command);
+		sprintf(dir, "%s/%s", p, cmd);
+		if (stat(dir, &st) == 0)
+			return (dir);
 
-		if (stat(full_path, &st) == 0 && S_ISREG(st.st_mode) &&
-			(st.st_mode &S_IXUSR))
-		{
-			free(tokens);
-			return (full_path);
-		}
-
-		free(full_path);
-		i++;
+		free(dir);
+		p = strtok(NULL, ":");
 	}
 
-	free(tokens);
 	return (NULL);
+}
+
+/**
+ *get_path - gets the PATH environment variable
+ *Return: pointer to PATH or NULL if not found
+ */
+char *get_path(void)
+{
+	char *path = getenv("PATH");
+
+	if (!path)
+	{
+		perror("Error");
+		return (NULL);
+	}
+
+	return (path);
+}
+
+/**
+ *execute_path - executes a command in PATH
+ *@cmd: command to execute
+ *@args: arguments to pass to command
+ *Return: status code of command
+ */
+int execute_path(char *cmd, char **args)
+{
+	char *path, *full_path;
+	int status;
+
+	path = get_path();
+	if (!path)
+		return (EXIT_FAILURE);
+
+	full_path = find_command(cmd, path);
+	free(path);
+	if (!full_path)
+	{
+		printf("%s: command not found\n", cmd);
+		return (EXIT_FAILURE);
+	}
+
+	args[0] = full_path;
+	status = execute(args);
+	free(full_path);
+
+	return (status);
+}
+
+/**
+ *execute_cmd - executes a command
+ *@cmd: command to execute
+ *@args: arguments to pass to command
+ *Return: status code of command
+ */
+int execute_cmd(char *cmd, char **args)
+{
+	int status;
+
+	/*Check if the command is a built-in command */
+	if (strcmp(cmd, "exit") == 0)
+	{
+		exit(EXIT_SUCCESS);
+	}
+	else if (strcmp(cmd, "cd") == 0)
+	{
+		if (args[1])
+		{
+			if (chdir(args[1]) != 0)
+			{
+				perror("Error");
+			}
+		}
+		else
+		{
+			chdir(getenv("HOME"));
+		}
+
+		return (EXIT_SUCCESS);
+	}
+
+	/*If the command is not a built-in command, execute it */
+	if (strchr(cmd, '/') != NULL)
+	{
+		status = execute(args);
+	}
+	else
+	{
+		status = execute_path(cmd, args);
+	}
+
+	return (status);
 }
