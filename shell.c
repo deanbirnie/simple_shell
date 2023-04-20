@@ -1,91 +1,113 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+#include <string.h>
+#include <sys/types.h>
 #include <sys/wait.h>
-#define MAX_CMD_LENGTH 1024
+#include <sys/stat.h>
+#define MAX_INPUT_LENGTH 1024
+#define MAX_TOKENS 100
 
-/*Parse the user's input */
-void parse_input(char *input, char **args)
+void handle_cd(char *path)
 {
-	char *token;
-	int i = 0;
-
-	/*Get the first token */
-	token = strtok(input, " \n");
-
-	/*Keep getting tokens until we reach the end of the input */
-	while (token != NULL)
+	if (chdir(path) != 0)
 	{
-		args[i] = token;
-		i++;
-
-		/*Get the next token */
-		token = strtok(NULL, " \n");
+		perror("chdir failed");
 	}
-
-	/*Set the last argument to NULL to mark the end of the argument list */
-	args[i] = NULL;
 }
 
-/*Execute the command */
-void execute(char **args)
+void handle_exit()
 {
-	pid_t pid;
+	exit(EXIT_SUCCESS);
+}
 
-	/*Fork the process */
-	pid = fork();
+int execute_command(char **tokens)
+{
+	pid_t pid = fork();
+
+	if (pid < 0)
+	{
+		perror("fork failed");
+		return -1;
+	}
 
 	if (pid == 0)
 	{
-		/*Child process */
-		if (execvp(args[0], args) == -1)
-		{
-			perror("Error");
-		}
-
+		execvp(tokens[0], tokens);
+		perror("execvp failed");
 		exit(EXIT_FAILURE);
-	}
-	else if (pid < 0)
-	{
-		/*Forking error */
-		perror("Error");
 	}
 	else
 	{
-		/*Parent process */
-		int wpid;
-		do { 	wpid = waitpid(pid, NULL, WUNTRACED);
-		}
-
-		while (!WIFEXITED(wpid) && !WIFSIGNALED(wpid));
+		int status;
+		waitpid(pid, &status, 0);
+		return WEXITSTATUS(status);
 	}
 }
 
-int main(void)
+void tokenize_input(char *input, char **tokens, int *num_tokens)
 {
-	char input[MAX_CMD_LENGTH];
-	char *args[MAX_CMD_LENGTH / 2 + 1];
+	char *token = strtok(input, " \t\n");
+	*num_tokens = 0;
+
+	while (token != NULL && *num_tokens < MAX_TOKENS)
+	{
+		tokens[*num_tokens] = token;
+		*num_tokens += 1;
+		token = strtok(NULL, " \t\n");
+	}
+
+	tokens[*num_tokens] = NULL;
+}
+
+int main()
+{
+	char *input = NULL;
+	size_t input_len = 0;
+	ssize_t read_len = 0;
+	char *tokens[MAX_TOKENS];
+	int num_tokens = 0;
 
 	while (1)
 	{
-		/*Get user input */
-		printf("Shell > ");
-		fgets(input, MAX_CMD_LENGTH, stdin);
+		printf("$ ");
+		read_len = getline(&input, &input_len, stdin);
 
-		/*Parse the input into arguments */
-		parse_input(input, args);
-
-		/*Execute the command */
-		if (strcmp(args[0], "exit") == 0)
+		if (read_len == -1)
 		{
-			exit(EXIT_SUCCESS);
+			perror("getline failed");
+			continue;
+		}
+
+		if (read_len == 1)
+		{
+			continue;
+		}
+
+		tokenize_input(input, tokens, &num_tokens);
+
+		if (strcmp(tokens[0], "cd") == 0)
+		{
+			if (num_tokens < 2)
+			{
+				fprintf(stderr, "cd: missing argument\n");
+				continue;
+			}
+
+			handle_cd(tokens[1]);
+		}
+		else if (strcmp(tokens[0], "exit") == 0)
+		{
+			handle_exit();
 		}
 		else
 		{
-			execute(args);
+			execute_command(tokens);
 		}
 	}
 
-	return (0);
+	free(input);
+	input = NULL;
+
+	return 0;
 }
