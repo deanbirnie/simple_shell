@@ -10,6 +10,7 @@
 
 /* Defines the maximum size of an input command */
 #define BUFFER_SIZE 1024
+extern char **environ;
 
 /* do we need this? */
 void prompt(void);
