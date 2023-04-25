@@ -49,7 +49,7 @@ char *find_command(char *cmd, char *path)
 	p = _strtok(path, ":");
 	while (p)
 	{
-		dir = malloc(strlen(p) + strlen(cmd) + 2);
+		dir = malloc(_strlen(p) + _strlen(cmd) + 2);
 		if (!dir)
 			exit(EXIT_FAILURE);
 
@@ -122,11 +122,11 @@ int execute_cmd(char *cmd, char **args)
 	int status;
 
 	/*Check if the command is a built-in command */
-	if (strcmp(cmd, "exit") == 0)
+	if (_strcmp(cmd, "exit") == 0)
 	{
 		exit(EXIT_SUCCESS);
 	}
-	else if (strcmp(cmd, "cd") == 0)
+	else if (_strcmp(cmd, "cd") == 0)
 	{
 		if (args[1])
 		{
@@ -144,7 +144,7 @@ int execute_cmd(char *cmd, char **args)
 	}
 
 	/*If the command is not a built-in command, execute it */
-	if (strchr(cmd, '/') != NULL)
+	if (_strchr(cmd, '/') != NULL)
 	{
 		status = execute(args);
 	}

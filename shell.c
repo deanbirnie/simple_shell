@@ -26,7 +26,7 @@ int main(void)
 		continue;
 	}
 	tokenize_input(input, tokens, &num_tokens);
-	if (strcmp(tokens[0], "cd") == 0)
+	if (_strcmp(tokens[0], "cd") == 0)
 	{
 		if (num_tokens < 2)
 	{
@@ -35,7 +35,7 @@ int main(void)
 	}
 		handle_cd(tokens[1]);
 	}
-	else if (strcmp(tokens[0], "exit") == 0)
+	else if (_strcmp(tokens[0], "exit") == 0)
 	{
 		handle_exit();
 	}	else
