@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
 #include "shell.h"
 
 /**
@@ -53,7 +46,7 @@ char *find_command(char *cmd, char *path)
 	char *dir, *p;
 	struct stat st;
 
-	p = strtok(path, ":");
+	p = _strtok(path, ":");
 	while (p)
 	{
 		dir = malloc(strlen(p) + strlen(cmd) + 2);
@@ -65,7 +58,7 @@ char *find_command(char *cmd, char *path)
 			return (dir);
 
 		free(dir);
-		p = strtok(NULL, ":");
+		p = _strtok(NULL, ":");
 	}
 
 	return (NULL);
