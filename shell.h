@@ -35,10 +35,10 @@ void prompt(void);
 /* Handles the execution of processes and child processes */
 int execute(char **args);
 
-/* used by _strtok to find delimters in a given string */
+/* strparse.c */
+int _strcmp(char *s1, char *s2);
+int _strlen(char *s);
 char *_strchr(const char *str, int c);
-
-/* used to parse and separate input commands */
 char *_strtok(char *str, const char *delim);
 
 /* getline */
