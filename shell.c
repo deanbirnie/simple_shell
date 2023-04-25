@@ -1,14 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
 #include "shell.h"
-
-#define MAX_INPUT_LENGTH 1024
-#define MAX_TOKENS 100
 
 /**
  *main - entry point for the shell
@@ -25,7 +15,7 @@ int main(void)
 	while (1)
 	{
 		printf("$ ");
-		read_len = getline(&input, &input_len, stdin);
+		read_len = _getline(&input, &input_len, stdin);
 		if (read_len == -1)
 	{
 		perror("getline failed");
