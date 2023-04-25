@@ -50,7 +50,7 @@ int execute_command(char **tokens)
 	if (pid == 0)
 	{
 		execvp(tokens[0], tokens);
-		perror("execvp failed");
+		perror("./hsh");
 		exit(EXIT_FAILURE);
 	}
 else
@@ -68,20 +68,20 @@ else
  * @tokens: an array of strings to store the resulting tokens
  * @num_tokens: a pointer to an integer to store the number of tokens
  *
- * This function uses the strtok() function to split the input string into
+ * This function uses the _strtok() function to split the input string into
  * tokens, which are stored in the `tokens` array. The maximum number of
  * tokens that can be stored is defined by the MAX_TOKENS macro. The number
  * of tokens is stored in the `num_tokens` variable.
  */
 void tokenize_input(char *input, char **tokens, int *num_tokens)
 {
-	char *token = strtok(input, " \t\n");
+	char *token = _strtok(input, " \t\n");
 	*num_tokens = 0;
 	while (token != NULL && *num_tokens < MAX_TOKENS)
 	{
 		tokens[*num_tokens] = token;
 		*num_tokens += 1;
-		token = strtok(NULL, " \t\n");
+		token = _strtok(NULL, " \t\n");
 	}
 	tokens[*num_tokens] = NULL;
 }
