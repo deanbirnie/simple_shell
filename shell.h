@@ -12,6 +12,12 @@
 #define BUFFER_SIZE 1024
 extern char **environ;
 
+
+void handle_cd(char *path);
+void handle_exit(void);
+int execute_command(char **tokens);
+void tokenize_input(char *input, char **tokens, int *num_tokens);
+
 /* do we need this? */
 void prompt(void);
 
