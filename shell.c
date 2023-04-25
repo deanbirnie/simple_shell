@@ -15,7 +15,7 @@ int main(void)
 	while (1)
 	{
 		printf("$ ");
-		read_len = _getline(&input, &input_len, stdin);
+		read_len = getline(&input, &input_len, stdin);
 		if (read_len == -1)
 	{
 		perror("getline failed");
@@ -47,4 +47,3 @@ int main(void)
 	input = NULL;
 	return (0);
 }
-
