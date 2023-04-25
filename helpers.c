@@ -1,14 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
 #include "shell.h"
-
-#define MAX_INPUT_LENGTH 1024
-#define MAX_TOKENS 100
 
 /**
  * handle_cd - change the current working directory to the specified path
