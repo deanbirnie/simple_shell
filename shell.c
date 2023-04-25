@@ -16,7 +16,7 @@ void handle_cd(char *path)
 	}
 }
 
-void handle_exit()
+void handle_exit(void)
 {
 	exit(EXIT_SUCCESS);
 }
@@ -28,7 +28,7 @@ int execute_command(char **tokens)
 	if (pid < 0)
 	{
 		perror("fork failed");
-		return -1;
+		return (-1);
 	}
 
 	if (pid == 0)
@@ -40,8 +40,9 @@ int execute_command(char **tokens)
 	else
 	{
 		int status;
+
 		waitpid(pid, &status, 0);
-		return WEXITSTATUS(status);
+		return (WEXITSTATUS(status));
 	}
 }
 
@@ -60,12 +61,14 @@ void tokenize_input(char *input, char **tokens, int *num_tokens)
 	tokens[*num_tokens] = NULL;
 }
 
-int main()
+int main(void)
 {
 	char *input = NULL;
 	size_t input_len = 0;
 	ssize_t read_len = 0;
+
 	char *tokens[MAX_TOKENS];
+
 	int num_tokens = 0;
 
 	while (1)
@@ -109,5 +112,5 @@ int main()
 	free(input);
 	input = NULL;
 
-	return 0;
+	return (0);
 }
