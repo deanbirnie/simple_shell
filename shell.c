@@ -1,49 +1,58 @@
+/*shell.c*/ 
 #include "shell.h"
 
 /**
- * main - entry point for the shell
- * Return: Always 0 on success.
+ *main - Entry point for the shell program
+ *@ac: Argument count
+ *@av: Arguments passed to the program
+ *@env: Environment variables
+ *Return: 0 on success
  */
-int main(void)
+int main(int ac, char **av, char **env)
 {
-	char *input = NULL;
-	size_t input_len = 0;
-	ssize_t read_len = 0;
-	char *tokens[MAX_TOKENS];
-	int num_tokens = 0;
 
+	int pathValue = 0, status = 0, is_path = 0;
+	char *line = NULL, **commands = NULL;
+	(void) ac;
 	while (1)
 	{
-		write(STDOUT_FILENO, "$ ", 2);
-		read_len = getline(&input, &input_len, stdin);
-		if (read_len == -1)
-		{	free(input);
-			exit(EXIT_FAILURE);
-		}
-		if (read_len == 1)
-		{	continue;
-		}
-		tokenize_input(input, tokens, &num_tokens);
-		if (_strcmp(tokens[0], "cd") == 0)
+		errno = 0;
+		line = _getline_command();
+		if (line == NULL && errno == 0)
+			return (0);
+		if (line)
 		{
-			if (num_tokens < 2)
+			pathValue++;
+			commands = tokenize(line);
+			if (!commands)
+				free(line);
+			if (!_strcmp(commands[0], "env"))
+				_getenv(env);
+			else
 			{
-				write(STDERR_FILENO, "cd error:", 21);
-				continue;
+				is_path = v_path(&commands[0], env);
+				status = _fork(commands, av, env, line, pathValue, is_path);
+				if (status == 200)
+				{
+					free(line);
+					return (0);
+				}
+
+				if (is_path == 0)
+					free(commands[0]);
 			}
-			handle_cd(tokens[1]);
-		}
-		else if (_strcmp(tokens[0], "exit") == 0)
-		{
-			free(input);
-			handle_exit();
+
+			free(commands);
 		}
 		else
 		{
-			execute_command(tokens);
+			if (isatty(STDIN_FILENO))
+				write(STDOUT_FILENO, "\n", 1);
+			exit(status);
 		}
+
+		free(line);
 	}
-	input = NULL;
-	free(input);
-	return (0);
+
+	return (status);
 }

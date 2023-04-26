@@ -1,157 +1,91 @@
+/*execute.c*/ 
 #include "shell.h"
 
 /**
- *execute - executes a command with arguments
- *@args: array of arguments passed to command
- *Return: status code of command
+ *tokenize - Tokenize a string
+ *@lineptr: String to tokenize
+ *
+ *Return: An array of tokens
  */
-int execute(char **args)
+char **tokenize(char *lineptr)
 {
-	pid_t pid;
-	int status;
+	char **user_command = NULL;
+	char *token = NULL;
+	size_t i = 0;
+	int size = 0;
 
-	pid = fork();
-	if (pid == 0)
-	{
-		/*Child process */
-		if (execve(args[0], args, environ) == -1)
-		{
-			perror("Error");
-			exit(EXIT_FAILURE);
-		}
-	}
-	else if (pid < 0)
-	{
-		/*Error forking */
-		perror("Error");
-	}
-	else
-	{
-		/*Parent process */
-		do {	status = waitpid(pid, &status, WUNTRACED);
-		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
-	}
-
-	return (status);
-}
-
-/**
- *find_command - finds a command in PATH
- *@cmd: command to find
- *@path: buffer to store path in
- *Return: pointer to path or NULL if command not found
- */
-char *find_command(char *cmd, char *path)
-{
-	char *dir, *p;
-	struct stat st;
-
-	p = _strtok(path, ":");
-	while (p)
-	{
-		dir = malloc(_strlen(p) + _strlen(cmd) + 2);
-		if (!dir)
-			exit(EXIT_FAILURE);
-
-		sprintf(dir, "%s/%s", p, cmd);
-		if (stat(dir, &st) == 0)
-			return (dir);
-
-		free(dir);
-		p = _strtok(NULL, ":");
-	}
-
-	return (NULL);
-}
-
-/**
- *get_path - gets the PATH environment variable
- *Return: pointer to PATH or NULL if not found
- */
-char *get_path(void)
-{
-	char *path = getenv("PATH");
-
-	if (!path)
-	{
-		perror("Error");
+	if (lineptr == NULL)
 		return (NULL);
+
+	for (i = 0; lineptr[i]; i++)
+	{
+		if (lineptr[i] == ' ')
+			size++;
 	}
 
-	return (path);
+	if ((size + 1) == _strlen(lineptr))
+		return (NULL);
+	user_command = malloc(sizeof(char*) *(size + 2));
+	if (user_command == NULL)
+		return (NULL);
+
+	token = strtok(lineptr, " \n\t\r");
+
+	for (i = 0; token != NULL; i++)
+	{
+		user_command[i] = token;
+		token = strtok(NULL, " \n\t\r");
+	}
+
+	user_command[i] = NULL;
+	return (user_command);
 }
 
 /**
- *execute_path - executes a command in PATH
- *@cmd: command to execute
- *@args: arguments to pass to command
- *Return: status code of command
+ *_path - Find the path to an executable file
+ *@arg: The command to find
+ *@env: The environment variables
+ *
+ *Return: 0 on success, -1 on failure
  */
-int execute_path(char *cmd, char **args)
+int v_path(char **arg, char **env)
 {
-	char *path, *full_path;
-	int status;
+	char *token = NULL, *path_rela = NULL, *path_absol = NULL;
+	size_t value_path, len;
+	struct stat stat_lineptr;
 
-	path = get_path();
-	if (!path)
-		return (EXIT_FAILURE);
-
-	full_path = find_command(cmd, path);
-	free(path);
-	if (!full_path)
+	if (stat(*arg, &stat_lineptr) == 0)
+		return (-1);
+	path_rela = _path(env); /**gets the content of "PATH="*/
+	if (!path_rela)
+		return (-1);
+	token = strtok(path_rela, ":"); /**tokenizes the content of "PATH="*/
+	len = _strlen(*arg); /**gets length of arg*/
+	while (token)
 	{
-		printf("%s: command not found\n", cmd);
-		return (EXIT_FAILURE);
-	}
-
-	args[0] = full_path;
-	status = execute(args);
-	free(full_path);
-
-	return (status);
-}
-
-/**
- *execute_cmd - executes a command
- *@cmd: command to execute
- *@args: arguments to pass to command
- *Return: status code of command
- */
-int execute_cmd(char *cmd, char **args)
-{
-	int status;
-
-	/*Check if the command is a built-in command */
-	if (_strcmp(cmd, "exit") == 0)
-	{
-		exit(EXIT_SUCCESS);
-	}
-	else if (_strcmp(cmd, "cd") == 0)
-	{
-		if (args[1])
+		value_path = _strlen(token);
+		path_absol = malloc(sizeof(char) *(value_path + len + 2));
+		if (!path_absol)
 		{
-			if (chdir(args[1]) != 0)
-			{
-				perror("Error");
-			}
-		}
-		else
-		{
-			chdir(getenv("HOME"));
+			free(path_rela);
+			return (-1);
 		}
 
-		return (EXIT_SUCCESS);
+		path_absol = strcpy(path_absol, token);
+		_strcat(path_absol, "/");
+		_strcat(path_absol, *arg);
+
+		if (stat(path_absol, &stat_lineptr) == 0)
+		{ *arg = path_absol;
+			free(path_rela);
+			return (0);
+		}
+
+		free(path_absol);
+		token = strtok(NULL, ":");
 	}
 
-	/*If the command is not a built-in command, execute it */
-	if (_strchr(cmd, '/') != NULL)
-	{
-		status = execute(args);
-	}
-	else
-	{
-		status = execute_path(cmd, args);
-	}
-
-	return (status);
+	token = '\0';
+	free(path_rela);
+	return (-1);
 }

@@ -1,56 +1,39 @@
-#ifndef SHELL_H_
-#define SHELL_H_
+#ifndef SHELL_H
+#define SHELL_H
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <errno.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <errno.h>
 
-/* Defines the maximum size of an input command */
-#define BUFFER_SIZE 1024
-#define MAX_INPUT_LENGTH 1024
-#define MAX_TOKENS 100
+/* Function declarations */
+int shell_cd(char **args);
+int shell_help(char **args);
+int shell_exit(char **args);
+int shell_ctrld(char **args);
 
 extern char **environ;
 
-void handle_cd(char *path);
-void handle_exit(void);
-int execute_command(char **tokens);
-void tokenize_input(char *input, char **tokens, int *num_tokens);
 
-char *find_command(char *cmd, char *path);
-
-int execute_path(char *cmd, char **args);
-
-int execute_cmd(char *cmd, char **args);
-
-int _putchar(char c);
-
-void print_err(char *program_name);
-
-/* do we need this? */
-void prompt(void);
-
-/* Handles the execution of processes and child processes */
-int execute(char **args);
-
-/* strparse.c */
 int _strcmp(char *s1, char *s2);
+size_t _strncmp(char *s1, char *s2, size_t n);
 int _strlen(char *s);
-char *_strchr(const char *str, int c);
-char *_strtok(char *str, const char *delim);
+char *_strcpy(char *dest, char *src);
+char *_strcat(char *dest, char *src);
+int _putchar(char c);
+int num_builtins(void);
+void _exit_command(char **args, char *lineptr, int _exit);
+int _fork(char **arg, char **av, char **env, char *lineptr, int np, int c);
+char *_getline_command(void);
+int v_path(char **arg, char **env);
+char *_path(char **env);
+void _getenv(char **env);
+char **tokenize(char *line);
 
-/* getline */
-size_t _fread(void *ptr, size_t size, size_t count, FILE *stream);
-int _fgetc(FILE *stream);
-ssize_t _getline(char **lineptr, size_t *n, FILE *stream);
 
-/* getenv.c */
-char *_getenv(char *name);
+#endif /* SHELL_H */
 
-#endif
