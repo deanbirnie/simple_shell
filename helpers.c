@@ -12,7 +12,7 @@ void handle_cd(char *path)
 {
 	if (chdir(path) != 0)
 	{
-		perror("chdir failed");
+		perror("");
 	}
 }
 
@@ -32,7 +32,7 @@ void handle_exit(void)
  * @tokens: array of strings representing the command and its arguments
  *
  * This function executes the specified command and its arguments in a new
- * process using the execvp() system call. It waits for the child process to
+ * process using the execve() system call. It waits for the child process to
  * complete using waitpid(), and returns its exit status. If an error occurs,
  * the function returns -1 and prints an error message using perror().
  *
@@ -49,8 +49,9 @@ int execute_command(char **tokens)
 	}
 	if (pid == 0)
 	{
-		execvp(tokens[0], tokens);
-		perror("./hsh");
+		execve(tokens[0], tokens, environ);
+		perror("");
+		free(*tokens);
 		exit(EXIT_FAILURE);
 	}
 else

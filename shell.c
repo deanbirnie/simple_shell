@@ -18,8 +18,8 @@ int main(void)
 		read_len = getline(&input, &input_len, stdin);
 		if (read_len == -1)
 		{
-			perror("getline failed");
-			continue;
+			free(input);
+			exit(EXIT_FAILURE);
 		}
 		if (read_len == 1)
 		{
@@ -30,12 +30,14 @@ int main(void)
 		{
 			if (num_tokens < 2)
 			{
-			write(STDERR_FILENO, "cd: missing argument\n", 21);
-			continue;
-			}	handle_cd(tokens[1]);
+				write(STDERR_FILENO, "cd error:", 21);
+				continue;
+			}
+			handle_cd(tokens[1]);
 		}
 		else if (_strcmp(tokens[0], "exit") == 0)
 		{
+			free(input);
 			handle_exit();
 		}
 		else
@@ -43,8 +45,7 @@ int main(void)
 			execute_command(tokens);
 		}
 	}
-	free(input);
 	input = NULL;
+	free(input);
 	return (0);
 }
-
