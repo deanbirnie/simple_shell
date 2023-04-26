@@ -17,13 +17,11 @@ int main(void)
 		write(STDOUT_FILENO, "$ ", 2);
 		read_len = getline(&input, &input_len, stdin);
 		if (read_len == -1)
-		{
-			free(input);
+		{	free(input);
 			exit(EXIT_FAILURE);
 		}
 		if (read_len == 1)
-		{
-			continue;
+		{	continue;
 		}
 		tokenize_input(input, tokens, &num_tokens);
 		if (_strcmp(tokens[0], "cd") == 0)
