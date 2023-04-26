@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 /* Defines the maximum size of an input command */
 #define BUFFER_SIZE 1024
@@ -16,7 +17,6 @@
 #define MAX_TOKENS 100
 
 extern char **environ;
-
 
 void handle_cd(char *path);
 void handle_exit(void);
@@ -28,6 +28,10 @@ char *find_command(char *cmd, char *path);
 int execute_path(char *cmd, char **args);
 
 int execute_cmd(char *cmd, char **args);
+
+int _putchar(char c);
+
+void print_err(char *program_name);
 
 /* do we need this? */
 void prompt(void);
@@ -45,5 +49,8 @@ char *_strtok(char *str, const char *delim);
 size_t _fread(void *ptr, size_t size, size_t count, FILE *stream);
 int _fgetc(FILE *stream);
 ssize_t _getline(char **lineptr, size_t *n, FILE *stream);
+
+/* getenv.c */
+char *_getenv(char *name);
 
 #endif
