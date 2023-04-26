@@ -1,4 +1,3 @@
-/*execute.c*/ 
 #include "shell.h"
 
 /**
@@ -25,7 +24,7 @@ char **tokenize(char *lineptr)
 
 	if ((size + 1) == _strlen(lineptr))
 		return (NULL);
-	user_command = malloc(sizeof(char*) *(size + 2));
+	user_command = malloc(sizeof(char *) * (size + 2));
 	if (user_command == NULL)
 		return (NULL);
 
@@ -42,11 +41,11 @@ char **tokenize(char *lineptr)
 }
 
 /**
- *_path - Find the path to an executable file
- *@arg: The command to find
- *@env: The environment variables
+ * v_path - Find the path to an executable file
+ * @arg: The command to find
+ * @env: The environment variables
  *
- *Return: 0 on success, -1 on failure
+ * Return: 0 on success, -1 on failure
  */
 int v_path(char **arg, char **env)
 {
@@ -64,7 +63,7 @@ int v_path(char **arg, char **env)
 	while (token)
 	{
 		value_path = _strlen(token);
-		path_absol = malloc(sizeof(char) *(value_path + len + 2));
+		path_absol = malloc(sizeof(char) * (value_path + len + 2));
 		if (!path_absol)
 		{
 			free(path_rela);
