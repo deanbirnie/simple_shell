@@ -1,6 +1,10 @@
-/*other_helper.c */ 
 #include "shell.h"
 
+/**
+ * _getline_command - captures user input and stores it in a buffer
+ *
+ * Return: pointer to the input string or NULL on failure
+ */
 char *_getline_command(void)
 {
 	char *lineptr = NULL;
@@ -18,6 +22,13 @@ char *_getline_command(void)
 	return (lineptr);
 }
 
+/**
+ * _path - find the PATH environment variable in env array
+ *
+ * @env: array of strings
+ *
+ * Return: returns the path for execve() or NULL on failure
+ */
 char *_path(char **env)
 {
 	size_t index = 0,
@@ -32,7 +43,7 @@ char *_path(char **env)
 	for (count = 5; env[index][var];
 		var ++, count++)
 	;
-	path = malloc(sizeof(char) *(count + 1));
+	path = malloc(sizeof(char) * (count + 1));
 
 	if (path == NULL)
 		return (NULL);
@@ -45,6 +56,12 @@ char *_path(char **env)
 	return (path);
 }
 
+/**
+ * _getenv - prints all environment variables to stdout
+ *
+ * @env: array of strings that represent the environment variables
+ * of the current process
+ */
 void _getenv(char **env)
 {
 	size_t run = 0;

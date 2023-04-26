@@ -1,4 +1,3 @@
-/*helper.c */ 
 #include "shell.h"
 
 int shell_cd(char **args);
@@ -12,16 +11,17 @@ int shell_ctrld(char **args);
  */
 char *builtin_str[] = {"cd", "help", "exit", "^D"};
 
-int (*builtin_func[]) (char **) = {&shell_cd, &shell_help, &shell_exit, &shell_ctrld};
+int (*builtin_func[]) (char **) = {&shell_cd,
+				   &shell_help, &shell_exit, &shell_ctrld};
 
 
 /**
- *builtins - returns the number of built-in functions.
- *Return: The number of built-in functions.
+ * num_builtins - returns the number of built-in functions.
+ * Return: The number of built-in functions.
  */
 int num_builtins(void)
 {
-	return (sizeof(builtin_str) / sizeof(char*));
+	return (sizeof(builtin_str) / sizeof(char *));
 }
 
 /**
