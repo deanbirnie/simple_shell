@@ -33,6 +33,6 @@ int v_path(char **arg, char **env);
 char *_path(char **env);
 void _getenv(char **env);
 char **tokenize(char *line);
-
+int is_empty_or_whitespace(const char *str);
 
 #endif
