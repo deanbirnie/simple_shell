@@ -9,10 +9,10 @@
  */
 int main(int ac, char **av, char **env)
 {
-
 	int pathValue = 0, status = 0, is_path = 0;
 	char *line = NULL, **commands = NULL;
 	(void) ac;
+
 	while (1)
 	{	errno = 0;
 		line = _getline_command();
@@ -21,9 +21,10 @@ int main(int ac, char **av, char **env)
 		if (line)
 		{	pathValue++;
 			commands = tokenize(line);
-			if (!commands)
-				free(line);
-			if (!_strcmp(commands[0], "env"))
+			if (commands == NULL)
+			{	free(line);
+				continue; }
+			else if (!_strcmp(commands[0], "env"))
 				_getenv(env);
 			else
 			{	is_path = v_path(&commands[0], env);
