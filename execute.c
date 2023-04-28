@@ -13,13 +13,20 @@ char **tokenize(char *lineptr)
 	size_t i = 0;
 	int size = 0;
 
-	if (lineptr == NULL)
+	if (lineptr == NULL || *lineptr == '\0' ||
+	    is_empty_or_whitespace(lineptr) != 0)
 		return (NULL);
 
 	for (i = 0; lineptr[i]; i++)
 	{
 		if (lineptr[i] == ' ')
+		{
+			while (lineptr[i + 1] == ' ')
+			{
+				i++;
+			}
 			size++;
+		}
 	}
 
 	if ((size + 1) == _strlen(lineptr))
