@@ -73,3 +73,24 @@ void _getenv(char **env)
 		run++;
 	}
 }
+
+/**
+ * is_empty_or_whitespace - checks if the string contains only whitespace
+ * characters
+ *
+ * @str: pointer to a string which is the input from the user
+ *
+ * Return: -1 if it contains only whitespace characters or 0 if it does not
+ */
+int is_empty_or_whitespace(const char *str)
+{
+	while (*str != '\0')
+	{
+		if (*str != ' ' && *str != '\t' && *str != '\n' && *str != '\r')
+		{
+			return (0);
+		}
+		str++;
+	}
+	return (-1);
+}
